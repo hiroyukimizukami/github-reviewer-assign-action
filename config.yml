@@ -1,0 +1,12 @@
+reviewers:
+  domain1:
+    - d1reviewer1
+    - d1reviewer2
+    - d1reviewer3
+    - d1reviewer4
+  domain2:
+    - d2reviewer1
+  domain3:
+    - d3reviewer1
+
+numberOfReviewers: 2

@@ -1,0 +1,14 @@
+name: 'Reviewer Assigner'
+description: 'Assigns reviewers to a pull request based on labels'
+inputs:
+  repo-token:  # id of input
+    description: 'a token that has repo scope'
+    required: true
+    default:
+  config-path:  # id of input
+    description: 'config yaml file'
+    required: true
+    default: '.github/reviewer_config.yml'
+runs:
+  using: 'node12'
+  main: 'index.js'
