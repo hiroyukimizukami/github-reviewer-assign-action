@@ -12,8 +12,8 @@ const main = async () => {
     const client = new Client(token, context.issue)
 
     const response  = await client.getConfigFile(configFile)
-    const yaml = Buffer.from(response.data.content, 'base64').toString()
-    const config = yaml.safeLoad(yaml)
+    const yamlString = Buffer.from(response.data.content, 'base64').toString()
+    const config = yaml.safeLoad(yamlString)
 
     const assigner = new Assigner(config.reviewers, context.payload, config.numberOfReviewers)
 
