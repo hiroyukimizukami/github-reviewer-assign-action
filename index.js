@@ -15,7 +15,9 @@ const main = async () => {
     core.debug(configFile)
 
     const config  = await client.getConfigFile(configFile)
-    core.info(JSON.stringify(config))
+    core.info(Object.keys(config))
+    core.info(congig.data)
+    core.info(congig.data.content)
 
     const assigner = new Assigner(config.reviewers, context.payload, config.numberOfReviewers)
 
