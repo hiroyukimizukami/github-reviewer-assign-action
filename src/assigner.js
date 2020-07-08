@@ -1,4 +1,5 @@
 const lodash = require('lodash')
+const core = require('@actions/core')
 
 const listAllReviewers = (teams) => {
     const accumulator = (h, v) => {
@@ -22,6 +23,12 @@ module.exports = class Assgigner {
         numberOfReviewers,
         numberOfReviewersFromDomain = 1
     ) {
+
+        core.debug("----Assigner---")
+        core.debug(reviewers)
+        core.debug(pullRequest)
+        core.debug(numberOfReviewers)
+
         this.allReviewers = listAllReviewers(reviewers)
         this.reviewers = reviewers
         this.domains = Object.keys(reviewers)
