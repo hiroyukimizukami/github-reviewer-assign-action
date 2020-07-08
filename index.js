@@ -9,15 +9,11 @@ const main = async () => {
     const context = github.context
     const token = core.getInput('repo-token', { required: true })
     const configFile = core.getInput('config-path', { required: true })
-    core.info(JSON.stringify(context.issue))
-
     const client = new Client(token, context.issue)
-    core.debug(configFile)
 
-    const config  = await client.getConfigFile(configFile)
-    core.info(Object.keys(config))
-    core.info(config.data)
-    core.info(config.data.content)
+    const response  = await client.getConfigFile(configFile)
+    const yaml = Buffer.from(response.data.content, 'base64').toString()
+    const config = yaml.safeLoad(yaml)
 
     const assigner = new Assigner(config.reviewers, context.payload, config.numberOfReviewers)
 
