@@ -26,6 +26,7 @@ test('it stores instance variables from parameters', () => {
         numberOfReviewersFromDomain
     )
     expect(assigner.allReviewers).toEqual(['d1-reviewer1', 'd1-reviewer2', 'd2-reviewer1', 'd2-reviewer2'])
+    expect(assigner.labels).toEqual(labels)
     expect(assigner.domains).toEqual(['domain1', 'domain2'])
     expect(assigner.pullRequest).not.toBeNull()
     expect(assigner.ownerName).toBe('pr_author')
