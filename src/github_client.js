@@ -14,7 +14,7 @@ module.exports = class GithubClient {
             owner: this.owner,
             repo: this.repo,
             pull_number: this.pull_number,
-            reviewer: reviewers
+            reviewers: reviewers
         })
     }
 
@@ -22,7 +22,7 @@ module.exports = class GithubClient {
         return await this.octokit.issues.addAssignees({
             owner: this.owner,
             repo: this.repo,
-            issue_number: this.pull__number,
+            issue_number: this.pull_number,
             assigner: [assignee]
         })
     }
