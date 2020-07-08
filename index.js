@@ -9,9 +9,12 @@ const main = async () => {
     const context = github.context
     const token = core.getInput('repo-token', { required: true })
     const configFile = core.getInput('config-path', { required: true })
+    core.info(JSON.stringify(context.issue))
+
     const client = new Client(token, context.issue)
     const config  = await client.getConfigFile(configFile)
     core.info(JSON.stringify(config))
+
     const assigner = new Assigner(config.reviewers, context.payload, config.numberOfReviewers)
 
     const reviewers = assigner.selectReviewers()

@@ -11,7 +11,7 @@ module.exports = class GithubClient {
         core.debug("---GithubClient---")
         core.debug(this.owner)
         core.debug(this.repo)
-        core.debug(this.pull_number))
+        core.debug(this.pull_number)
     }
 
     async assignReviewers(reviewers) {
