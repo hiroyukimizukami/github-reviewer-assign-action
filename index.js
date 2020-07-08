@@ -12,6 +12,8 @@ const main = async () => {
     core.info(JSON.stringify(context.issue))
 
     const client = new Client(token, context.issue)
+    core.debug(configFile)
+
     const config  = await client.getConfigFile(configFile)
     core.info(JSON.stringify(config))
 
