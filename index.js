@@ -15,7 +15,7 @@ const main = async () => {
     const yamlString = Buffer.from(response.data.content, 'base64').toString()
     const config = yaml.safeLoad(yamlString)
 
-    const assigner = new Assigner(config.reviewers, context.payload, config.numberOfReviewers)
+    const assigner = new Assigner(config.reviewers, context.payload.labels, context.issue, config.numberOfReviewers)
 
     const reviewers = assigner.selectReviewers()
     if (reviewers.length == 0) {

@@ -19,6 +19,7 @@ const findDomainLabelNames =  (domains,  labels) => {
 module.exports = class Assgigner {
     constructor(
         reviewers,
+        labels,
         pullRequest,
         numberOfReviewers,
         numberOfReviewersFromDomain = 1
@@ -26,22 +27,21 @@ module.exports = class Assgigner {
 
         core.debug("----Assigner---")
         core.debug(reviewers)
+        core.debug(labels)
         core.debug(pullRequest)
         core.debug(numberOfReviewers)
 
         this.allReviewers = listAllReviewers(reviewers)
         this.reviewers = reviewers
         this.domains = Object.keys(reviewers)
-        this.pullRequest = pullRequest
-        this.ownerName = pullRequest.user.login
+        this.labels = labels
+        this.ownerName = pullRequest.owner
         this.numberOfReviewers = numberOfReviewers
         this.numberOfReviewersFromDomain = numberOfReviewersFromDomain
     }
 
     selectReviewers() {
-        const labels = this.pullRequest.labels
-        const prDomainNames = findDomainLabelNames(this.domains, labels)
-
+        const prDomainNames = findDomainLabelNames(this.domains, this.labels)
         if (prDomainNames.length == 0) {
             return this._selectReviewersFromAllReviewers()
         }

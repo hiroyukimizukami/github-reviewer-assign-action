@@ -1,8 +1,7 @@
-fs = require('fs')
 Assigner = require('../src/assigner')
 
-const payloadFile = __dirname + '/payload.json'
-const payload = JSON.parse(fs.readFileSync(payloadFile, 'utf-8')).payload
+const labels = [{name: 'domain1'}]
+const pullRequest = {owner: 'pr_author', number: 6, repo: 'test'}
 
 test('it stores instance variables from parameters', () => {
     const config = {
@@ -21,7 +20,8 @@ test('it stores instance variables from parameters', () => {
     const numberOfReviewersFromDomain = 1
     const assigner = new Assigner(
         config.reviewers,
-        payload.pull_request,
+        labels,
+        pullRequest,
         numberOfReviewers,
         numberOfReviewersFromDomain
     )
@@ -47,7 +47,12 @@ test('it assgins certain number of reviewers, 1 reviewer is from domain', () => 
         }
     }
     const numberOfReviewers = 3
-    const assigner = new Assigner(config.reviewers, payload.pull_request, numberOfReviewers)
+    const assigner = new Assigner(
+        config.reviewers,
+        labels,
+        pullRequest,
+        numberOfReviewers
+    )
     const reviewers = assigner.selectReviewers()
     expect(reviewers.length).toBe(3)
     expect(reviewers[0]).toMatch(/d1-/)
@@ -67,7 +72,12 @@ test('it assigns possible maximum number of reviewers', () => {
         }
     }
     const numberOfReviewers = 100
-    const assigner = new Assigner(config.reviewers, payload.pull_request, numberOfReviewers)
+    const assigner = new Assigner(
+        config.reviewers,
+        labels,
+        pullRequest,
+        numberOfReviewers
+    )
     const reviewers = assigner.selectReviewers()
     expect(reviewers.length).toBe(4)
     expect(reviewers[0]).toMatch(/d1-/)
@@ -82,14 +92,15 @@ test('it assigns expected number of reviewers from the domain', () => {
             ],
             "domain2": [
                 "d2-reviewer1",
-                "d2-reviewer"
+                "d2-reviewer2"
             ]
         }
     }
     const numberOfReviewersForDomain = 1
     const assigner = new Assigner(
         config.reviewers,
-        payload.pull_request,
+        labels,
+        pullRequest,
         2,
         numberOfReviewersForDomain
     )
@@ -107,12 +118,17 @@ test('it assigns certain number of random reviewers', () => {
             ],
             "domain2": [
                 "d2-reviewer1",
-                "d2-reviewer"
+                "d2-reviewer2"
             ]
         }
     }
     const numberOfReviewers = 2
-    const assigner = new Assigner(config.reviewers, payload.pull_request, numberOfReviewers)
+    const assigner = new Assigner(
+        config.reviewers,
+        [],
+        pullRequest,
+        numberOfReviewers
+    )
     const reviewers = assigner._selectReviewersFromAllReviewers()
     expect(reviewers.length).toBe(2)
 })
@@ -126,13 +142,18 @@ test('does not assign an author of the PR as a reviewer', () => {
             ],
             "domain2": [
                 "d2-reviewer1",
-                "d2-reviewer"
+                "d2-reviewer2"
             ]
         }
     }
     const numberOfReviewers = 2
-    const assigner = new Assigner(config.reviewers, payload.pull_request, numberOfReviewers)
-    const author =  payload.pull_request.user.login
+    const assigner = new Assigner(
+        config.reviewers,
+        [],
+        pullRequest,
+        numberOfReviewers
+    )
+    const author =  'pr_author'
     const reviewers = assigner._selectReviewers(
         [author, 'reviewer1', 'reviewer2'],
         2
