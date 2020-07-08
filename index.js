@@ -11,7 +11,7 @@ const main = async () => {
     const configFile = core.getInput('config-path', { required: true })
     const client = new Client(token, context.issue)
     const config  = await client.getConfigFile(configFile)
-    console.log(config)
+    core.info(JSON.stringify(config))
     const assigner = new Assigner(config.reviewers, context.payload, config.numberOfReviewers)
 
     const reviewers = assigner.selectReviewers()

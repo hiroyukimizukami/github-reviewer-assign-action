@@ -1,4 +1,5 @@
 const github = require('@actions/github')
+const core = require('@actions/core')
 
 module.exports = class GithubClient {
     constructor(token, pull_request) {
@@ -6,6 +7,11 @@ module.exports = class GithubClient {
         this.owner = pull_request.owner
         this.repo = pull_request.repo
         this.pull_number = pull_request.number
+
+        core.debug("---GithubClient---")
+        core.debug(this.owner)
+        core.debug(this.repo)
+        core.debug(this.pull_number))
     }
 
     async assignReviewers(reviewers) {
