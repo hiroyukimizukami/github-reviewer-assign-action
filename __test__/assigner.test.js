@@ -60,6 +60,23 @@ test('it assigns possible maximum number of reviewers', () => {
     expect(reviewers[0]).toMatch(/d1-/)
 })
 
+test('selectReviewer returns empty array when there are no suitable reviewers', () => {
+    const config = new ActionConfig({
+        reviewers: {
+            domain0: [],
+            domain1: ['pr_author'],
+            domain2: ['pr_author'],
+            domain3: ['pr_author']
+        },
+        numberOfReviewers: 2,
+        numberOfReviewersFromDomain: 1
+    })
+
+    const assigner = new Assigner(actionContext, config)
+    const reviewers = assigner.selectReviewers()
+    expect(reviewers.length).toBe(0)
+})
+
 test('it does not assign reviewers for a pr that does not have any of defined domains', () => {
     const config = new ActionConfig({
         reviewers: mismatchReviewers,
@@ -110,6 +127,23 @@ test('_selectReviewers does not assign an author of the PR as a reviewer', () =>
     )
     expect(reviewers.length).toBe(2)
     expect(reviewers).not.toContain(actionContext.owner)
+})
+
+test('_selectReviewer returns empty array when there are no suitable reviewers', () => {
+    const config = new ActionConfig({
+        reviewers: {
+            domain0: [],
+            domain1: ['pr_author'],
+            domain2: ['pr_author'],
+            domain3: ['pr_author']
+        },
+        numberOfReviewers: 2,
+        numberOfReviewersFromDomain: 1
+    })
+
+    const assigner = new Assigner(actionContext, config)
+    const reviewers = assigner._selectReviewers()
+    expect(reviewers.length).toBe(0)
 })
 
 test('doestRespondTo returns true if the pr have any of defined domains in the config file', () => {

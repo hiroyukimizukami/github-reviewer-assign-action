@@ -24,9 +24,10 @@ const main = async () => {
     const yamlString = Buffer.from(response.data.content, 'base64').toString()
     const config = new ActionConfig(yaml.safeLoad(yamlString))
 
+    core.debug(JSON.stringify(context))
+    core.debug(JSON.stringify(config))
+
     if (!Assigner.doesRespondTo(context, config)) {
-        core.debug(JSON.stringify(context))
-        core.debug(JSON.stringify(config))
         core.info('This pr does not have any of defined labels.')
         return
     }
