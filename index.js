@@ -37,7 +37,7 @@ const main = async () => {
     const reviewers = assigner.selectReviewers()
     core.debug(reviewers)
     if (reviewers.length == 0) {
-        core.warn("Failed to assign reviewers: ")
+        core.warning("Failed to assign reviewers: ")
         return ;
     }
 
