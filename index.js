@@ -17,6 +17,11 @@ const main = async () => {
     const yamlString = Buffer.from(response.data.content, 'base64').toString()
     const config = new ActionConfig(yaml.safeLoad(yamlString))
 
+    if (context.payload.requested_reviewers.length > 0) {
+        core.info('This pr has requested_reviewers')
+        return
+    }
+
     if (!Assigner.doesRespondTo(context, config)) {
         core.info('This pr does not have any of defined labels.')
         return
