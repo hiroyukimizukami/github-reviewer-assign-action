@@ -1,3 +1,4 @@
+const utils = require('./utils')
 
 const listAllReviewers = (teams) => {
     const accumulator = (h, v) => {
@@ -13,7 +14,7 @@ module.exports = class ActionConfig {
         this.reviewers = configHash.reviewers
         this.allReviewers = listAllReviewers(configHash.reviewers)
         this.domains = Object.keys(configHash.reviewers)
-        this.numberOfReviewers = configHash.numberOfReviewers ?? 1
-        this.numberOfReviewersForDomain = configHash.numberOfReviewersForDomain ?? 1
+        this.numberOfReviewers = utils.valueOr(configHash.numberOfReviewers, 1)
+        this.numberOfReviewersForDomain = utils.valueOr(configHash.numberOfReviewersForDomain, 1)
     }
 }

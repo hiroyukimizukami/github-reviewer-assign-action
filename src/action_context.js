@@ -1,8 +1,9 @@
 const github = require('@actions/github')
+const utils = require('./utils')
 
 module.exports = class ActionContext {
     constructor(context) {
-        const labels = context.payload.labels ?? []
+        const labels = utils.valueOr(context.payload.labels, [])
         this.labels = labels.map((label) => label.name)
         this.owner = context.issue.owner
         this.number = context.issue.number
