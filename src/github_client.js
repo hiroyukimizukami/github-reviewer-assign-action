@@ -2,11 +2,11 @@ const github = require('@actions/github')
 const core = require('@actions/core')
 
 module.exports = class GithubClient {
-    constructor(token, pull_request) {
+    constructor(token, actionContext) {
         this.octokit = github.getOctokit(token)
-        this.owner = pull_request.owner
-        this.repo = pull_request.repo
-        this.pull_number = pull_request.number
+        this.owner = actionContext.owner
+        this.repo = actionConetxt.repo
+        this.pull_number = actionConetxt.number
     }
 
     async assignReviewers(reviewers) {

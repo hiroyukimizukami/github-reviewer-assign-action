@@ -4,27 +4,34 @@ const core = require('@actions/core')
 const github = require('@actions/github')
 const Assigner = require('./src/assigner')
 const Client = require('./src/github_client')
+const ActionConfig  = require('./src/action_config')
+const ActionContext = require('./src/action_context')
 
 const main = async () => {
-    const context = github.context
     const token = core.getInput('repo-token', { required: true })
     const configFile = core.getInput('config-path', { required: true })
-    const client = new Client(token, context.issue)
+    const context = new ActionContext(github.context)
+    const client = new Client(token, context)
 
     const response  = await client.getConfigFile(configFile)
     const yamlString = Buffer.from(response.data.content, 'base64').toString()
-    const config = yaml.safeLoad(yamlString)
+    const config = new ActionConfig(yaml.safeLoad(yamlString))
 
-    const assigner = new Assigner(config.reviewers, context.payload.labels, context.issue, config.numberOfReviewers)
+    if (!Assigner.doesRespondTo(context, config)) {
+        core.info('This pr does not have any of defined labels.')
+        return
+    }
+
+    const assigner = new Assigner(context, config)
 
     const reviewers = assigner.selectReviewers()
     if (reviewers.length == 0) {
-        core.error("Failed to assign reviewers: ")
-        throw new Error('Failed to assign reviewers.')
+        core.warn("Failed to assign reviewers: ")
+        return ;
     }
 
     const result = await client.assignReviewers(reviewers)
-    core.info(result)
+    core.info("Assigned reviewers:" + JSON.stringify(result))
 }
 
 main()

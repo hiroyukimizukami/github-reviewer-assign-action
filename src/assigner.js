@@ -1,53 +1,27 @@
 const lodash = require('lodash')
 const core = require('@actions/core')
 
-const listAllReviewers = (teams) => {
-    const accumulator = (h, v) => {
-        h.push(v)
-        return h
-    }
+class Assigner {
+    constructor(context, config) {
+        this.labels = context.labels
+        this.owner = context.owner
 
-    return Object.values(teams).reduce(accumulator, []).flat()
-}
-
-const findDomainLabelNames =  (domains,  labels) => {
-    return labels
-        .filter((label) => domains.includes(label.name))
-        .map((label) => label.name)
-}
-
-module.exports = class Assgigner {
-    constructor(
-        reviewers,
-        labels,
-        pullRequest,
-        numberOfReviewers,
-        numberOfReviewersFromDomain = 1
-    ) {
-
-        core.debug("----Assigner---")
-        core.debug(reviewers)
-        core.debug(labels)
-        core.debug(pullRequest)
-        core.debug(numberOfReviewers)
-
-        this.allReviewers = listAllReviewers(reviewers)
-        this.reviewers = reviewers
-        this.domains = Object.keys(reviewers)
-        this.labels = !!labels ? labels : []
-        this.ownerName = pullRequest.owner
-        this.numberOfReviewers = numberOfReviewers
-        this.numberOfReviewersFromDomain = numberOfReviewersFromDomain
+        this.allReviewers = config.allReviewers
+        this.reviewers = config.reviewers
+        this.domains = config.domains
+        this.numberOfReviewers = config.numberOfReviewers
+        this.numberOfReviewersFromDomain = config.numberOfReviewersForDomain
     }
 
     selectReviewers() {
-        const prDomainNames = findDomainLabelNames(this.domains, this.labels)
-        if (prDomainNames.length == 0) {
-            return this._selectReviewersFromAllReviewers()
+        // If the issue does not have any of defined labels, do not assign reviewers
+        const reviewDomains = lodash.intersection(this.domains, this.labels)
+        if (reviewDomains.length == 0) {
+            throw new Error('Assigner does not support this PR')
         }
 
         // Currently only supports 1 domain label
-        const reviewers = this._selectReviewersForDomain(prDomainNames[0])
+        const reviewers = this._selectReviewersForDomain(reviewDomains[0])
         if (reviewers.length >= this.numberOfReviewers) {
             return reviewers
         }
@@ -59,8 +33,13 @@ module.exports = class Assgigner {
     }
 
     _selectReviewersForDomain(domainName) {
-        return this._selectReviewers(this.reviewers[domainName], this.numberOfReviewersFromDomain)
-
+        //  A domain that does not have reviewers is covered by all reviewers.
+        // This is for a spec that to allow a config file to define genneral domain like 'all, or misc'
+        const reviewersForDomain = this.reviewers[domainName]
+        if (!(reviewersForDomain && reviewersForDomain.length > 0)) {
+            return this._selectReviewersFromAllReviewers()
+        }
+        return this._selectReviewers(reviewersForDomain, this.numberOfReviewersFromDomain)
     }
 
     _selectReviewersFromAllReviewers() {
@@ -68,7 +47,13 @@ module.exports = class Assgigner {
     }
 
     _selectReviewers(reviewers, number) {
-        const candidates = lodash.without(reviewers, this.ownerName)
+        const candidates = lodash.without(reviewers, this.owner)
         return lodash.sampleSize(candidates, number)
     }
 }
+
+Assigner.doesRespondTo = (context, config)  => {
+    return lodash.intersection(config.domains, context.labels).length > 0
+}
+
+module.exports = Assigner
