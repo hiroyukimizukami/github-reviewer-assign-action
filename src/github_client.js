@@ -5,8 +5,8 @@ module.exports = class GithubClient {
     constructor(token, actionContext) {
         this.octokit = github.getOctokit(token)
         this.owner = actionContext.owner
-        this.repo = actionConetxt.repo
-        this.pull_number = actionConetxt.number
+        this.repo = actionContext.repo
+        this.pull_number = actionContext.number
     }
 
     async assignReviewers(reviewers) {

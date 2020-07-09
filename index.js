@@ -10,6 +10,12 @@ const ActionContext = require('./src/action_context')
 const main = async () => {
     const token = core.getInput('repo-token', { required: true })
     const configFile = core.getInput('config-path', { required: true })
+
+    if (github.context.payload.pull_request.requested_reviewers.length > 0) {
+        core.info('This pr has requested_reviewers')
+        return
+    }
+
     const context = new ActionContext(github.context)
     const client = new Client(token, context)
 
@@ -17,10 +23,7 @@ const main = async () => {
     const yamlString = Buffer.from(response.data.content, 'base64').toString()
     const config = new ActionConfig(yaml.safeLoad(yamlString))
 
-    if (context.payload.requested_reviewers.length > 0) {
-        core.info('This pr has requested_reviewers')
-        return
-    }
+
 
     if (!Assigner.doesRespondTo(context, config)) {
         core.info('This pr does not have any of defined labels.')
