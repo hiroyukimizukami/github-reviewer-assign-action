@@ -14,7 +14,7 @@ const mismatchReviewers = {
 
 const actionContext = new ActionContext({
     issue: {owner: 'pr_author', number: 6, repo: 'test'},
-    payload: {labels: [{name: 'domain1'}]}
+    payload: {pull_request: {labels: [{name: 'domain1'}]}}
 })
 
 test('it stores instance variables from parameters', () => {
