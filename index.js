@@ -18,6 +18,7 @@ const main = async () => {
 
     const context = new ActionContext(github.context)
     const client = new Client(token, context)
+    core.debug(JSON.stringify(client))
 
     const response  = await client.getConfigFile(configFile)
     const yamlString = Buffer.from(response.data.content, 'base64').toString()
@@ -33,6 +34,7 @@ const main = async () => {
     const assigner = new Assigner(context, config)
 
     const reviewers = assigner.selectReviewers()
+    core.debug(reviewers)
     if (reviewers.length == 0) {
         core.warn("Failed to assign reviewers: ")
         return ;
