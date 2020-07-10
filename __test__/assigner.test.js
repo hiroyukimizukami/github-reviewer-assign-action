@@ -13,8 +13,8 @@ const mismatchReviewers = {
 }
 
 const actionContext = new ActionContext({
-    issue: {owner: 'pr_author', number: 6, repo: 'test'},
-    payload: {pull_request: {labels: [{name: 'domain1'}]}}
+    issue: {owner: 'repo_owner', number: 6, repo: 'test'},
+    payload: {pull_request: {user: {name: 'pr_author'}, labels: [{name: 'domain1'}]}}
 })
 
 test('it stores instance variables from parameters', () => {
