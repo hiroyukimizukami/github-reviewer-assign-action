@@ -10,7 +10,7 @@ class Assigner {
         this.reviewers = config.reviewers
         this.domains = config.domains
         this.numberOfReviewers = config.numberOfReviewers
-        this.numberOfReviewersFromDomain = config.numberOfReviewersForDomain
+        this.numberOfReviewersForDomain = config.numberOfReviewersForDomain
     }
 
     selectReviewers() {
@@ -39,7 +39,7 @@ class Assigner {
         if (!(reviewersForDomain && reviewersForDomain.length > 0)) {
             return this._selectReviewersFromAllReviewers()
         }
-        return this._selectReviewers(reviewersForDomain, this.numberOfReviewersFromDomain)
+        return this._selectReviewers(reviewersForDomain, this.numberOfReviewersForDomain)
     }
 
     _selectReviewersFromAllReviewers() {
@@ -53,7 +53,13 @@ class Assigner {
 }
 
 Assigner.doesRespondTo = (context, config)  => {
-    return lodash.intersection(config.domains, context.labels).length > 0
+    if (lodash.intersection(config.domains, context.labels).length == 0) {
+        return false
+    }
+    if (context.numberOfReviewers >= config.numberOfReviewers) {
+        return false
+    }
+    return true
 }
 
 module.exports = Assigner

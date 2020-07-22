@@ -21,5 +21,9 @@ module.exports = class ActionConfig {
         this.domains = Object.keys(configHash.reviewers)
         this.numberOfReviewers = utils.valueOr(configHash.numberOfReviewers, 1)
         this.numberOfReviewersForDomain = utils.valueOr(configHash.numberOfReviewersForDomain, 1)
+
+        if (this.numberOfReviewers < this.numberOfReviewersForDomain) {
+            throw new Error('numberOfReviewers must be greater than (or equal) numberOfReviewersForDomain')
+        }
     }
 }
