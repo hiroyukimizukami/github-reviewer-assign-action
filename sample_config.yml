@@ -1,4 +1,5 @@
 reviewers:
+  any: []
   domain1:
     - d1reviewer1
     - d1reviewer2
@@ -10,3 +11,4 @@ reviewers:
     - d3reviewer1
 
 numberOfReviewers: 2
+numberOfReviewersForDomain: 1
