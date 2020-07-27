@@ -11,11 +11,6 @@ const main = async () => {
     const token = core.getInput('repo-token', { required: true })
     const configFile = core.getInput('config-path', { required: true })
 
-    if (github.context.payload.pull_request.requested_reviewers.length > 0) {
-        core.info('This pr has requested_reviewers')
-        return
-    }
-
     const context = new ActionContext(github.context)
     const client = new Client(token, context)
     core.debug(JSON.stringify(client))
