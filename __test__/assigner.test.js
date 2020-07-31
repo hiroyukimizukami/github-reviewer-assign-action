@@ -66,6 +66,20 @@ test('it assigns possible maximum number of reviewers', () => {
     expect(reviewers[0]).toMatch(/d1-/)
 })
 
+test('it assigns possible maximum number of reviewers even if there are lesser reviewers to requested number of reviewers', () => {
+    const config = new ActionConfig({
+        reviewers: defaultReviewers,
+        numberOfReviewers: 4,
+        numberOfReviewersForDomain: 3
+    })
+
+    const assigner = new Assigner(actionContext, config)
+    const reviewers = assigner.selectReviewers()
+    expect(reviewers.length).toBe(4)
+    expect(reviewers[0]).toMatch(/d1-/)
+    expect(reviewers[1]).toMatch(/d1-/)
+})
+
 test('selectReviewer returns empty array when there are no suitable reviewers', () => {
     const config = new ActionConfig({
         reviewers: {
@@ -90,6 +104,7 @@ test('it does not assign reviewers for a pr that does not have any of defined do
         numberOfReviewersForDomain: 1
     })
 
+    // Note: this case should be checked before calling this method by checking 'doesRespondTo'
     const assigner = new Assigner(actionContext, config)
     expect(assigner.selectReviewers).toThrow(Error)
 })
