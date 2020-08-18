@@ -19,25 +19,25 @@ const main = async () => {
     const yamlString = Buffer.from(response.data.content, 'base64').toString()
     const config = new ActionConfig(yaml.safeLoad(yamlString))
 
-    core.debug(JSON.stringify(context))
-    core.debug(JSON.stringify(config))
+    core.debug("Context = " + JSON.stringify(context))
+    core.debug("Config = " + JSON.stringify(config))
 
     if (!Assigner.doesRespondTo(context, config)) {
-        core.info('This pr does not have any of defined labels.')
+        core.info('Unsupported PR')
         return
     }
 
     const assigner = new Assigner(context, config)
 
     const reviewers = assigner.selectReviewers()
-    core.debug(reviewers)
+    core.info("Selected reviewers = " + JSON.stringify(reviewers))
     if (reviewers.length == 0) {
         core.warning("Failed to assign reviewers: ")
         return ;
     }
 
     const result = await client.assignReviewers(reviewers)
-    core.info("Assigned reviewers:" + JSON.stringify(result))
+    core.info("Result = " + JSON.stringify(result))
 }
 
 main()
