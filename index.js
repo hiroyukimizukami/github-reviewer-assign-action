@@ -37,6 +37,9 @@ const main = async () => {
     }
 
     const result = await client.assignReviewers(reviewers)
+          .catch(error => {
+              core.setFailed(error.message)
+          })
     core.info("Result = " + JSON.stringify(result))
 }
 
