@@ -17,7 +17,7 @@ class Assigner {
         // If the issue does not have any of defined labels, do not assign reviewers
         const reviewDomains = lodash.intersection(this.domains, this.labels)
         if (reviewDomains.length == 0) {
-            throw new Error('Assigner does not support this PR')
+            throw new Error('ValidLabelNotFound')
         }
 
         // Currently only supports 1 domain label

@@ -4,7 +4,8 @@ ActionContext = require('../src/action_context.js')
 
 const defaultReviewers = {
     domain1: ["d1-reviewer1", "d1-reviewer2"],
-    domain2: ["d2-reviewer1","d2-reviewer2"]
+    domain2: ["d2-reviewer1","d2-reviewer2"],
+    domain3: ["pr_author"],
 }
 
 const mismatchReviewers = {
@@ -12,7 +13,7 @@ const mismatchReviewers = {
     domain3: ["d3-reviewer1","d3-reviewer2"]
 }
 
-const actionContext = new ActionContext({
+const defaultActionContext = new ActionContext({
     issue: {owner: 'repo_owner', number: 6, repo: 'test'},
     payload: {
         pull_request: {
@@ -23,194 +24,279 @@ const actionContext = new ActionContext({
     }
 })
 
-test('it stores instance variables from parameters', () => {
-    const config = new ActionConfig({
-        reviewers: defaultReviewers,
-        numberOfReviewers: 2,
-        numberOfReviewersForDomain: 1
-    })
+describe('instance variables', () => {
+    test('it stores parameters as instance variables', () => {
+        const config = new ActionConfig({
+            reviewers: defaultReviewers,
+            numberOfReviewers: 2,
+            numberOfReviewersForDomain: 1
+        })
 
-    const assigner = new Assigner(actionContext, config)
-    expect(assigner.allReviewers).toEqual(['d1-reviewer1', 'd1-reviewer2', 'd2-reviewer1', 'd2-reviewer2'])
-    expect(assigner.labels).toEqual(actionContext.labels)
-    expect(assigner.domains).toEqual(['domain1', 'domain2'])
-    expect(assigner.pullRequest).not.toBeNull()
-    expect(assigner.owner).toBe('pr_author')
-    expect(assigner.numberOfReviewers).toBe(config.numberOfReviewers)
-    expect(assigner.numberOfReviewersForDomain).toBe(config.numberOfReviewersForDomain)
+        const assigner = new Assigner(defaultActionContext, config)
+        expect(assigner.allReviewers).toEqual(['d1-reviewer1', 'd1-reviewer2', 'd2-reviewer1', 'd2-reviewer2', 'pr_author'])
+        expect(assigner.labels).toEqual(defaultActionContext.labels)
+        expect(assigner.domains).toEqual(['domain1', 'domain2', 'domain3'])
+        expect(assigner.pullRequest).not.toBeNull()
+        expect(assigner.owner).toBe('pr_author')
+        expect(assigner.numberOfReviewers).toBe(config.numberOfReviewers)
+        expect(assigner.numberOfReviewersForDomain).toBe(config.numberOfReviewersForDomain)
+    })
 })
 
-test('it assgins certain number of reviewers, 1 reviewer is from domain', () => {
-    const config = new ActionConfig({
-        reviewers: defaultReviewers,
-        numberOfReviewers: 3,
-        numberOfReviewersForDomain: 1
-    })
+describe('select reviewers: basic cases', () => {
+    const subject = (() => {
+        const config = new ActionConfig({
+            reviewers: {
+                domain1: ['d1-reviewer1'],
+                domain2: ['d2-reviewer1', 'd2-reviewer2', 'pr_author'],
+            },
+            numberOfReviewers: 3,
+            numberOfReviewersForDomain: 1
+        })
 
-    const assigner = new Assigner(actionContext, config)
-    const reviewers = assigner.selectReviewers()
-    expect(reviewers.length).toBe(3)
-    expect(reviewers[0]).toMatch(/d1-/)
+        const assigner = new Assigner(defaultActionContext, config)
+        return assigner.selectReviewers()
+    })()
+
+    test('it assgins speficied number of reviewers', () => {
+        expect(subject.length).toBe(3)
+    })
+    test('it assigns reviewers from the domain as many as possible', () => {
+        expect(subject).toEqual(expect.arrayContaining(['d1-reviewer1']))
+    })
+    test('it does not assign pr author', () => {
+        expect(subject).toEqual(expect.not.arrayContaining(['pr_author']))
+    })
 })
 
-test('it assigns possible maximum number of reviewers', () => {
-    const config = new ActionConfig({
-        reviewers: defaultReviewers,
-        numberOfReviewers: 100,
-        numberOfReviewersForDomain: 1
-    })
+describe('select reviewers: default value of number of reviewers', () => {
+    const subject = (() => {
+        const config = new ActionConfig({
+            reviewers: defaultReviewers,
+        })
 
-    const assigner = new Assigner(actionContext, config)
-    const reviewers = assigner.selectReviewers()
-    expect(reviewers.length).toBe(4)
-    expect(reviewers[0]).toMatch(/d1-/)
+        const assigner = new Assigner(defaultActionContext, config)
+        return assigner.selectReviewers()
+    })()
+
+    test('it assgins speficied default number of reviewers', () => {
+        expect(subject.length).toBe(1)
+    })
 })
 
-test('it assigns possible maximum number of reviewers even if there are lesser reviewers to requested number of reviewers', () => {
-    const config = new ActionConfig({
-        reviewers: defaultReviewers,
-        numberOfReviewers: 4,
-        numberOfReviewersForDomain: 3
-    })
+describe('select reviewers: impossible number of reviewers', () => {
+    const subject = (() => {
+        const config = new ActionConfig({
+            reviewers: defaultReviewers,
+            numberOfReviewers: 100,
+        })
 
-    const assigner = new Assigner(actionContext, config)
-    const reviewers = assigner.selectReviewers()
-    expect(reviewers.length).toBe(4)
-    expect(reviewers[0]).toMatch(/d1-/)
-    expect(reviewers[1]).toMatch(/d1-/)
+        const assigner = new Assigner(defaultActionContext, config)
+        return assigner.selectReviewers()
+    })()
+
+    test('it assgins reviewers as many as possible', () => {
+        expect(subject.length).toBe(4)
+    })
+    test('it does not assign pr author', () => {
+        expect(subject).toEqual(expect.not.arrayContaining(['pr_author']))
+    })
 })
 
-test('selectReviewer returns empty array when there are no suitable reviewers', () => {
-    const config = new ActionConfig({
-        reviewers: {
-            domain0: [],
-            domain1: ['pr_author'],
-            domain2: ['pr_author'],
-            domain3: ['pr_author']
-        },
-        numberOfReviewers: 2,
-        numberOfReviewersForDomain: 1
-    })
+describe('select reviewers: not enough reviewers in the designated domain', () => {
+    const subject = (() => {
+        const config = new ActionConfig({
+            reviewers: {
+                domain1: ['d1-reviewer1', 'd1-reviewer2'],
+                domain2: ['pr_author', 'd2-reviewer1'],
+            },
+            numberOfReviewers: 3,
+            numberOfReviewersForDomain: 2
+        })
 
-    const assigner = new Assigner(actionContext, config)
-    const reviewers = assigner.selectReviewers()
-    expect(reviewers.length).toBe(0)
+        const assigner = new Assigner(defaultActionContext, config)
+        return assigner.selectReviewers()
+    })()
+
+    test('it assgins reviewers as many as possible', () => {
+        expect(subject.length).toBe(3)
+    })
+    test('it assigns reviewers from the domain as many as possible', () => {
+        expect(subject).toEqual(expect.arrayContaining(['d1-reviewer1', 'd1-reviewer2']))
+    })
+    test('it does not assign pr author', () => {
+        expect(subject).toEqual(expect.not.arrayContaining(['pr_author']))
+    })
 })
 
-test('it does not assign reviewers for a pr that does not have any of defined domains', () => {
-    const config = new ActionConfig({
-        reviewers: mismatchReviewers,
-        numberOfReviewers: 2,
-        numberOfReviewersForDomain: 1
-    })
+describe('select reviewers: no suitable reviewers', () => {
+    const subject = (() => {
+        const config = new ActionConfig({
+            reviewers: {
+                domain1: [],
+                domain2: ['pr_author'],
+                domain3: ['pr_author']
+            },
+        })
 
-    // Note: this case should be checked before calling this method by checking 'doesRespondTo'
-    const assigner = new Assigner(actionContext, config)
-    expect(assigner.selectReviewers).toThrow(Error)
+        const assigner = new Assigner(defaultActionContext, config)
+        return assigner.selectReviewers()
+    })()
+
+    test('it does not assign reviewers', () => {
+        expect(subject.length).toBe(0)
+    })
 })
 
-test('_selectReviewerForDomain assigns expected number of reviewers from the domain', () => {
-    const config = new ActionConfig({
-        reviewers: defaultReviewers,
-        numberOfReviewers: 2,
-        numberOfReviewersForDomain: 1
-    })
+describe('select reviewers: undefined labels', () => {
+    const subject = (() => {
+        const config = new ActionConfig({
+            reviewers: defaultReviewers
+        })
 
-    const assigner = new Assigner(actionContext, config)
-    const reviewers = assigner._selectReviewersForDomain('domain1')
-    expect(reviewers.length).toBe(config.numberOfReviewersForDomain)
-    expect(reviewers[0]).toMatch(/d1-/)
-})
-
-test('_selectReviewerFromAllReviewers assigns certain number of reviewers', () => {
-    const config = new ActionConfig({
-        reviewers: mismatchReviewers,
-        numberOfReviewers: 2,
-        numberOfReviewersForDomain: 1
-    })
-
-    const assigner = new Assigner(actionContext, config)
-    const reviewers = assigner._selectReviewersFromAllReviewers()
-    // _selectReviewersFromAllReviewers assigns reviewers whether the pr has any of defined domains
-    expect(reviewers.length).toBe(2)
-})
-
-test('_selectReviewers does not assign an author of the PR as a reviewer', () => {
-    const config = new ActionConfig({
-        reviewers: defaultReviewers,
-        numberOfReviewers: 0, // does not effect because this is a test for private method
-        numberOfReviewersForDomain: 0 // same here
-    })
-    const assigner = new Assigner(actionContext, config)
-    const reviewers = assigner._selectReviewers(
-        [actionContext.owner, 'reviewer1', 'reviewer2'],
-        2
-    )
-    expect(reviewers.length).toBe(2)
-    expect(reviewers).not.toContain(actionContext.owner)
-})
-
-test('_selectReviewer returns empty array when there are no suitable reviewers', () => {
-    const config = new ActionConfig({
-        reviewers: {
-            domain0: [],
-            domain1: ['pr_author'],
-            domain2: ['pr_author'],
-            domain3: ['pr_author']
-        },
-        numberOfReviewers: 2,
-        numberOfReviewersForDomain: 1
-    })
-
-    const assigner = new Assigner(actionContext, config)
-    const reviewers = assigner._selectReviewers()
-    expect(reviewers.length).toBe(0)
-})
-
-test('doestRespondTo returns true if the pr has any of defined domains in the config file', () => {
-    const config = new ActionConfig({
-        reviewers: defaultReviewers,
-        numberOfReviewers: 0,
-        numberOfReviewersForDomain: 0
-    })
-    expect(Assigner.doesRespondTo(actionContext, config)).toBe(true)
-})
-
-test('doestRespondTo returns false if the pr does not have any of defined domains in the config file', () => {
-    const config = new ActionConfig({
-        reviewers: mismatchReviewers,
-        numberOfReviewers: 0,
-        numberOfReviewersForDomain: 0
-    })
-    expect(Assigner.doesRespondTo(actionContext, config)).toBe(false)
-})
-
-test('doestRespondTo returns false if the pr has reviewers more than the number that is defined as numberOfReviewers in the config', () => {
-    const config = new ActionConfig({
-        reviewers: defaultReviewers,
-        numberOfReviewers: 2,
-        numberOfReviewersForDomain: 1
-    })
-
-    const context = new ActionContext({
-        issue: {owner: 'repo_owner', number: 6, repo: 'test'},
-        payload: {
-            pull_request: {
-                user: {name: 'pr_author'},
-                labels: [{name: 'domain1'}],
-                requested_reviewers: [
-                    {
-                        "login": "other_user",
-                        "id": 1
-                    },
-                    {
-                        "login": "other_user2",
-                        "id": 2
-                    }
-                ]
+        const context = new ActionContext({
+            issue: {owner: 'repo_owner', number: 6, repo: 'test'},
+            payload: {
+                pull_request: {
+                    user: {name: 'pr_author'},
+                    labels: [{name: 'unrealistic-label'}],
+                    requested_reviewers: []
+                }
             }
-        }
+        })
+
+        const assigner = new Assigner(context, config)
+        return assigner.selectReviewers()
     })
 
-    expect(Assigner.doesRespondTo(context, config)).toBe(false)
+    test('it throws an error', () => {
+        // Note: this case should be checked before calling this method by checking 'doesRespondTo'
+        expect(subject).toThrowError(/ValidLabelNotFound/)
+    })
+})
+
+describe('select reviewers: 1 valid label and 1 invalid label', () => {
+    const subject = (() => {
+        const config = new ActionConfig({
+            reviewers: {
+                domain1: ['d1-reviewer1', 'pr_author'],
+                domain2: ['d2-reviewer1', 'd2-reviewer3'],
+                numberOfReviewers: 3
+            }
+        })
+
+        const context = new ActionContext({
+            issue: {owner: 'repo_owner', number: 6, repo: 'test'},
+            payload: {
+                pull_request: {
+                    user: {name: 'pr_author'},
+                    labels: [{name: 'domain1'}, {name: 'invalid-label'}],
+                    requested_reviewers: []
+                }
+            }
+        })
+
+        const assigner = new Assigner(context, config)
+        return assigner.selectReviewers()
+    })()
+
+    test('it assigns a reviewer(as the defualt value)', () => {
+        expect(subject.length).toBe(1)
+    })
+
+    test('it assigns a reviewer from the designated domain', () => {
+        expect(subject).toEqual(expect.arrayContaining(['d1-reviewer1']))
+    })
+})
+
+describe('select reviewers: the designated domain does not have reviewers', () => {
+    const subject = (() => {
+        const config = new ActionConfig({
+            reviewers: {
+                domain1: [],
+                domain2: ['pr_author'],
+                domain3: ['d3-reviewer1'],
+                domain4: ['d4-reviewer1'],
+            },
+            numberOfReviewers: 2
+        })
+
+        const assigner = new Assigner(defaultActionContext, config)
+        return assigner.selectReviewers()
+    })()
+
+    test('it assigns a reviewer from all reviewers', () => {
+        expect(subject.length).toBe(2)
+    })
+
+    test('it still does not assign pr author', () => {
+        expect(subject).toEqual(expect.not.arrayContaining(['pr_author']))
+    })
+})
+
+describe('doesRespondTo', () => {
+    test('it returns true if the pr has any of defined domains in the config file', () => {
+        const config = new ActionConfig({
+            reviewers: defaultReviewers,
+            numberOfReviewers: 0,
+            numberOfReviewersForDomain: 0
+        })
+        expect(Assigner.doesRespondTo(defaultActionContext, config)).toBe(true)
+    })
+
+    test('it returns false if the pr does not have any of defined domains in the config file', () => {
+        const config = new ActionConfig({
+            reviewers: mismatchReviewers,
+            numberOfReviewers: 0,
+            numberOfReviewersForDomain: 0
+        })
+        expect(Assigner.doesRespondTo(defaultActionContext, config)).toBe(false)
+    })
+
+    test('it returns true if the pr has reviewers lesser than the designated number', () => {
+        const config = new ActionConfig({
+            reviewers: defaultReviewers,
+            numberOfReviewers: 2,
+            numberOfReviewersForDomain: 1
+        })
+
+        const context = new ActionContext({
+            issue: {owner: 'repo_owner', number: 6, repo: 'test'},
+            payload: {
+                pull_request: {
+                    user: {name: 'pr_author'},
+                    labels: [{name: 'domain1'}],
+                    requested_reviewers: [
+                        {"login": "other_user", "id": 1},
+                    ]
+                }
+            }
+        })
+
+        expect(Assigner.doesRespondTo(context, config)).toBe(true)
+    })
+
+    test('it returns false if the pr has reviewers more than or equal to the designated number', () => {
+        const config = new ActionConfig({
+            reviewers: defaultReviewers,
+            numberOfReviewers: 2,
+            numberOfReviewersForDomain: 1
+        })
+
+        const context = new ActionContext({
+            issue: {owner: 'repo_owner', number: 6, repo: 'test'},
+            payload: {
+                pull_request: {
+                    user: {name: 'pr_author'},
+                    labels: [{name: 'domain1'}],
+                    requested_reviewers: [
+                        {"login": "other_user", "id": 1},
+                        {"login": "other_user2","id": 2}
+                    ]
+                }
+            }
+        })
+
+        expect(Assigner.doesRespondTo(context, config)).toBe(false)
+    })
 })
