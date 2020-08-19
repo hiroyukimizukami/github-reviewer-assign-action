@@ -17,7 +17,7 @@ const defaultActionContext = new ActionContext({
     issue: {owner: 'repo_owner', number: 6, repo: 'test'},
     payload: {
         pull_request: {
-            user: {name: 'pr_author'},
+            user: {login: 'pr_author'},
             labels: [{name: 'domain1'}],
             requested_reviewers: []
         }
@@ -158,7 +158,7 @@ describe('select reviewers: undefined labels', () => {
             issue: {owner: 'repo_owner', number: 6, repo: 'test'},
             payload: {
                 pull_request: {
-                    user: {name: 'pr_author'},
+                    user: {login: 'pr_author'},
                     labels: [{name: 'unrealistic-label'}],
                     requested_reviewers: []
                 }
@@ -189,7 +189,7 @@ describe('select reviewers: 1 valid label and 1 invalid label', () => {
             issue: {owner: 'repo_owner', number: 6, repo: 'test'},
             payload: {
                 pull_request: {
-                    user: {name: 'pr_author'},
+                    user: {login: 'pr_author'},
                     labels: [{name: 'domain1'}, {name: 'invalid-label'}],
                     requested_reviewers: []
                 }
@@ -264,7 +264,7 @@ describe('doesRespondTo', () => {
             issue: {owner: 'repo_owner', number: 6, repo: 'test'},
             payload: {
                 pull_request: {
-                    user: {name: 'pr_author'},
+                    user: {login: 'pr_author'},
                     labels: [{name: 'domain1'}],
                     requested_reviewers: [
                         {"login": "other_user", "id": 1},
@@ -287,7 +287,7 @@ describe('doesRespondTo', () => {
             issue: {owner: 'repo_owner', number: 6, repo: 'test'},
             payload: {
                 pull_request: {
-                    user: {name: 'pr_author'},
+                    user: {login: 'pr_author'},
                     labels: [{name: 'domain1'}],
                     requested_reviewers: [
                         {"login": "other_user", "id": 1},

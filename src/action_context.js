@@ -5,7 +5,7 @@ module.exports = class ActionContext {
     constructor(context) {
         const labels = utils.valueOr(context.payload.pull_request.labels, [])
         this.labels = labels.map((label) => label.name)
-        this.owner = context.payload.pull_request.user.name
+        this.owner = context.payload.pull_request.user.login
         this.repo_owner = context.issue.owner
         this.number = context.issue.number
         this.repo = context.issue.repo
